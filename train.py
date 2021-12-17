@@ -83,7 +83,12 @@ loaders, num_classes = data.loaders(
     args.use_test
 )
 
+if not isinstance(num_classes, int):
+    num_classes = num_classes.item()
+
 architecture = getattr(models, args.model)
+
+print(architecture)
 
 if args.curve is None:
     model = architecture.base(num_classes=num_classes, **architecture.kwargs)
@@ -96,22 +101,27 @@ else:
         args.num_bends,
         args.fix_start,
         args.fix_end,
-        architecture_kwargs=architecture.kwargs,
     )
     base_model = None
     if args.resume is None:
         for path, k in [(args.init_start, 0), (args.init_end, args.num_bends - 1)]:
+            print(path)
             if path is not None:
                 if base_model is None:
-                    base_model = architecture.base(num_classes=num_classes, **architecture.kwargs)
-                checkpoint = torch.load(path)
-                print('Loading %s as point #%d' % (path, k))
-                base_model.load_state_dict(checkpoint['model_state'])
+                    #todo: add if with original kwargs for use with other model types
+                    base_model = architecture.base(num_classes=num_classes)
+                if torch.cuda.is_available():
+                    base_model.load_state_dict(torch.load(path))
+                else:
+                    base_model.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
+                    print('Loading %s as point #%d' % (path, k))
+                #todo: add if for use with other model types (original model classes)
                 model.import_base_parameters(base_model, k)
         if args.init_linear:
             print('Linear initialization.')
             model.init_linear()
-model.cuda()
+if torch.cuda.is_available():
+    model.cuda()
 
 
 def learning_rate_schedule(base_lr, epoch, total_epochs):

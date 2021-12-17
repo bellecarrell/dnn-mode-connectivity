@@ -265,6 +265,7 @@ class CurveNet(Module):
 
         self.l2 = 0.0
         self.coeff_layer = self.curve(self.num_bends)
+        print(self.architecture)
         self.net = self.architecture(num_classes, fix_points=self.fix_points, **architecture_kwargs)
         self.curve_modules = []
         for module in self.net.modules():
@@ -306,6 +307,7 @@ class CurveNet(Module):
         self.l2 = sum(module.l2 for module in self.curve_modules)
 
     def forward(self, input, t=None):
+        print(self.net)
         if t is None:
             t = input.data.new(1).uniform_()
         coeffs_t = self.coeff_layer(t)
