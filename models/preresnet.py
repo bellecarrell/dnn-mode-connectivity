@@ -358,7 +358,6 @@ class PreActBlockCurve(nn.Module):
 
     def __init__(self, in_planes, planes, fix_points, stride=1):
         super(PreActBlockCurve, self).__init__()
-        print(in_planes)
         self.bn1 = curves.BatchNorm2d(in_planes, fix_points=fix_points)
         self.conv1 = curves.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False, fix_points=fix_points)
         self.bn2 = curves.BatchNorm2d(planes, fix_points=fix_points)
@@ -368,11 +367,10 @@ class PreActBlockCurve(nn.Module):
             self.shortcut = curves.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False, fix_points=fix_points)
 
     def forward(self, x, coeffs_t):
-        print(coeffs_t)
         out = F.relu(self.bn1(x, coeffs_t))
-        shortcut = self.shortcut(out) if hasattr(self, 'shortcut') else x
+        shortcut = self.shortcut(out, coeffs_t) if hasattr(self, 'shortcut') else x
         out = self.conv1(out, coeffs_t)
-        out = self.conv2(F.relu(self.bn2(out, coeffs_t)))
+        out = self.conv2(F.relu(self.bn2(out, coeffs_t)), coeffs_t)
         out += shortcut
         return out
 
@@ -398,7 +396,7 @@ class PreActResNetCurve(nn.Module):
         return nn.ModuleList(layers)
 
     def forward(self, x, coeffs_t):
-        out = self.conv1(x, coeffs_t)
+        x = self.conv1(x, coeffs_t)
         for block in self.layer1:
             x = block(x, coeffs_t)
         for block in self.layer2:
@@ -407,7 +405,7 @@ class PreActResNetCurve(nn.Module):
             x = block(x, coeffs_t)
         for block in self.layer4:
             x = block(x, coeffs_t)
-        out = F.avg_pool2d(out, 4)
+        out = F.avg_pool2d(x, 4)
         out = out.view(out.size(0), -1)
         out = self.linear(out, coeffs_t)
         return out

@@ -88,8 +88,6 @@ if not isinstance(num_classes, int):
 
 architecture = getattr(models, args.model)
 
-print(architecture)
-
 if args.curve is None:
     model = architecture.base(num_classes=num_classes, **architecture.kwargs)
 else:
@@ -200,4 +198,4 @@ if args.epochs % args.save_freq != 0:
         args.epochs,
         model_state=model.state_dict(),
         optimizer_state=optimizer.state_dict()
-    )
+        )
