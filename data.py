@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 
 from torch.utils.data import Dataset
 from os.path import join as pjoin
+import os.path as path
 
 class Transforms:
 
@@ -50,7 +51,7 @@ def loaders(dataset, path, batch_size, num_workers, transform_name, use_test=Fal
                 transforms.ToTensor(),
                 normalize]) # numpy unit8 --> [-1, 1] tensor
 
-        X_tr, Y_tr, X_te, Y_te = load_cifar5m()
+        X_tr, Y_tr, X_te, Y_te = load_cifar5m(path)
         X_tr, Y_tr = X_tr[45000:], Y_tr[45000:]
         #todo: add preprocessing for data aug once added data aug
         train_set = TransformingTensorDataset(X_tr, Y_tr, transform=preproc)
@@ -125,7 +126,20 @@ class TransformingTensorDataset(Dataset):
     def __len__(self):
         return len(self.X)
 
-def load_cifar5m():
+def download_dir(gpath, localroot='~/tmp/data', no_clobber=True):
+    ''' Downloads GCS dir into localdir (if not exists), and returns the local dir path.'''
+    import subprocess
+    import pickle
+    localroot = path.expanduser(localroot)
+
+    nc = '-n' if no_clobber else ''
+    subprocess.call(f'mkdir -p {localroot}', shell=True)
+    subprocess.call(f'gsutil -m cp {nc} -r {gpath} {localroot}', shell=True)
+    localdir = pjoin(localroot, path.basename(gpath))
+    return localdir
+
+
+def load_cifar5m(path=''):
     '''
         Returns 5million synthetic samples.
         warning: returns as numpy array of unit8s, not torch tensors.
@@ -134,8 +148,8 @@ def load_cifar5m():
     # todo add flag for nte? keeping at 5k to match other dataset curve training
     nte = 5000 # num. of test samples to use (max 1e6)
     print('Downloading CIFAR 5mil...')
-    #local_dir = download_dir('gs://gresearch/cifar5m') # download all 6 dataset files
-    local_dir = '/expanse/lustre/projects/csd697/nmallina/data/cifar-5m'
+    local_dir = download_dir('gs://gresearch/cifar5m',localroot=path) # download all 6 dataset files
+    #local_dir = '/expanse/lustre/projects/csd697/nmallina/data/cifar-5m'
 
     npart = 1000448
     X_tr = np.empty((5*npart, 32, 32, 3), dtype=np.uint8)

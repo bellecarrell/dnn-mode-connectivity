@@ -50,8 +50,9 @@ def train(train_loader, model, optimizer, criterion, regularizer=None, lr_schedu
         if lr_schedule is not None:
             lr = lr_schedule(iter / num_iters)
             adjust_learning_rate(optimizer, lr)
-        #input = input.cuda(async=True)
-        #target = target.cuda(async=True)
+        if torch.cuda.is_available():
+            input = input.cuda()
+            target = target.cuda()
 
         output = model(input)
         loss = criterion(output, target)
@@ -80,10 +81,14 @@ def test(test_loader, model, criterion, regularizer=None, **kwargs):
     model.eval()
 
     for input, target in test_loader:
-        #input = input.cuda(async=True)
-        #target = target.cuda(async=True)
+        if torch.cuda.is_available():
+            input = input.cuda()
+            target = target.cuda()
 
-        output = model(input, **kwargs)
+        if kwargs:
+            output = model(input, **kwargs)
+        else:
+            output = model(input)        
         nll = criterion(output, target)
         loss = nll.clone()
         if regularizer is not None:
@@ -107,8 +112,12 @@ def predictions(test_loader, model, **kwargs):
     preds = []
     targets = []
     for input, target in test_loader:
-        #input = input.cuda(async=True)
-        output = model(input, **kwargs)
+        if torch.cuda.is_available():
+            input = input.cuda()
+        if kwargs:
+            output = model(input, **kwargs)
+        else:
+            output = model(input)
         probs = F.softmax(output, dim=1)
         preds.append(probs.cpu().data.numpy())
         targets.append(target.numpy())
@@ -155,14 +164,17 @@ def update_bn(loader, model, **kwargs):
     model.apply(lambda module: _get_momenta(module, momenta))
     num_samples = 0
     for input, _ in loader:
-        #input = input.cuda(async=True)
+        if torch.cuda.is_available():
+            input = input.cuda()
         batch_size = input.data.size(0)
 
         momentum = batch_size / (num_samples + batch_size)
         for module in momenta.keys():
             module.momentum = momentum
-
-        model(input, **kwargs)
+        if kwargs:
+            model(input, **kwargs)
+        else:
+            model(input)
         num_samples += batch_size
 
     model.apply(lambda module: _set_momenta(module, momenta))
