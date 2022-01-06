@@ -63,23 +63,21 @@ loaders, num_classes = data.loaders(
 
 architecture = getattr(models, args.model)
 
-model1 = architecture.base
+model1 = architecture.base(num_classes=num_classes)
 if torch.cuda.is_available():
     model1.cuda()
-    checkpoint = torch.load(args.ckpt1)
+    model1.load_state_dict(torch.load(args.ckpt1))
 else: 
-    checkpoint = torch.load(args.ckpt1, map_location=torch.device('cpu'))
-model1.load_state_dict(checkpoint)
+    model1.load_state_dict(torch.load(args.ckpt1, map_location=torch.device('cpu')))
 
-model2 = architecture.base
+model2 = architecture.base(num_classes=num_classes)
 if torch.cuda.is_available():
     model2.cuda()
-    checkpoint = torch.load(args.ckpt2)
+    model2.load_state_dict(torch.load(args.ckpt1))
 else: 
-    checkpoint = torch.load(args.ckpt2, map_location=torch.device('cpu'))
-model2.load_state_dict(checkpoint)
+    model2.load_state_dict(torch.load(args.ckpt2, map_location=torch.device('cpu')))
 
-mid_model = architecture.base
+mid_model = architecture.base(num_classes=num_classes)
 
 criterion = F.cross_entropy
 regularizer = curves.l2_regularizer(args.wd)
