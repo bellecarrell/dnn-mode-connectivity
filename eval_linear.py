@@ -69,7 +69,7 @@ if torch.cuda.is_available():
     checkpoint = torch.load(args.ckpt1)
 else: 
     checkpoint = torch.load(args.ckpt1, map_location=torch.device('cpu'))
-model1.load_state_dict(checkpoint['model_state'])
+model1.load_state_dict(checkpoint)
 
 model2 = architecture.base
 if torch.cuda.is_available():
@@ -77,7 +77,7 @@ if torch.cuda.is_available():
     checkpoint = torch.load(args.ckpt2)
 else: 
     checkpoint = torch.load(args.ckpt2, map_location=torch.device('cpu'))
-model2.load_state_dict(checkpoint['model_state'])
+model2.load_state_dict(checkpoint)
 
 mid_model = architecture.base
 
