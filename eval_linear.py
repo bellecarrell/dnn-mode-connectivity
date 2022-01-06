@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(description='DNN curve evaluation')
 parser.add_argument('--dir', type=str, default='/tmp/eval', metavar='DIR',
                     help='training directory (default: /tmp/eval)')
 
-parser.add_argument('--num_points', type=int, default=61, metavar='N',
+parser.add_argument('--num_points', type=int, default=5, metavar='N',
                     help='number of points on the curve (default: 61)')
 
 parser.add_argument('--dataset', type=str, default='CIFAR10', metavar='DATASET',
@@ -66,13 +66,17 @@ architecture = getattr(models, args.model)
 model1 = architecture.base
 if torch.cuda.is_available():
     model1.cuda()
-checkpoint = torch.load(args.ckpt1)
+    checkpoint = torch.load(args.ckpt1)
+else: 
+    checkpoint = torch.load(args.ckpt1, map_location=torch.device('cpu'))
 model1.load_state_dict(checkpoint['model_state'])
 
 model2 = architecture.base
 if torch.cuda.is_available():
     model2.cuda()
-checkpoint = torch.load(args.ckpt2)
+    checkpoint = torch.load(args.ckpt2)
+else: 
+    checkpoint = torch.load(args.ckpt2, map_location=torch.device('cpu'))
 model2.load_state_dict(checkpoint['model_state'])
 
 mid_model = architecture.base
@@ -156,7 +160,7 @@ print(tabulate.tabulate([
     ], tablefmt='simple', floatfmt='10.4f'))
 
 np.savez(
-    os.path.join(args.dir, 'curve.npz'),
+    os.path.join(args.dir, 'linear.npz'),
     ts=ts,
     dl=dl,
     tr_loss=tr_loss,
