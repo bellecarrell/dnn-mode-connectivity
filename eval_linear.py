@@ -106,7 +106,7 @@ columns = ['t', 'Train loss', 'Train nll', 'Train error (%)', 'Test nll', 'Test 
 for i, t_value in enumerate(ts):
     #t.data.fill_(t_value)
 
-    mid_update = t_value*parameters_to_vector(model1.parameters()) + (1-t_value)*model2.parameters()
+    mid_update = t_value*parameters_to_vector(model1.parameters()) + (1-t_value)*parameters_to_vector(model2.parameters())
     vector_to_parameters(mid_update, mid_model.parameters())
 
     utils.update_bn(loaders['train'], mid_model)
